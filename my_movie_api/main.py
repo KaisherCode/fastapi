@@ -39,12 +39,21 @@ def get_movies():
 #             return item
 #     return []
 
-@app.get("/movies/{id}",tags=["movies"])
-def getmovies_by_id(id:int):
+@app.get("/movie/{id}",tags=["movie"])
+def get_movie_by_id(id:int):
     item = [i for i in movies if i["id"]==id] 
     if item == []:
         return f"Not found movie"
     return item
         
-        
+# @app.get("/movies/",tags=["movies"])
+# def get_movies_by_category(category:str,year:int):
+#     return category
+
+@app.get("/movies/",tags=["movies"])
+def get_movies_by_cetegory(category:str):
+    filtered_by_category=[movie for movie in movies if movie["category"]==category]
+    if filtered_by_category == []:
+        return f"Not found category"
+    return filtered_by_category
         
