@@ -9,6 +9,14 @@ movies=[
         "year":2009,
         "rating":7.8,
         "category":"Acción"
+    },
+    {
+        "id":2,
+        "title":"Reverdale",
+        "overview":"Riverdale is an American television series based on the characters of Archie Comics.",
+        "year":2017,
+        "rating":8,
+        "category":"Teen Drama Mystery"
     }
 ]
 
@@ -23,3 +31,20 @@ def message():
 @app.get("/movies",tags=["movies"])
 def get_movies():
     return movies
+
+# @app.get("/movies/{id}",tags=["movies"])
+# def get_movies_by_id(id:int):
+#     for item in movies:
+#         if item["id"]==id:
+#             return item
+#     return []
+
+@app.get("/movies/{id}",tags=["movies"])
+def getmovies_by_id(id:int):
+    item = [i for i in movies if i["id"]==id] 
+    if item == []:
+        return f"Not found movie"
+    return item
+        
+        
+        
