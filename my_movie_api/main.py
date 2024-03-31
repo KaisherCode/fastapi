@@ -1,4 +1,4 @@
-from fastapi import FastAPI,Body
+from fastapi import FastAPI,Path,Query
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field,ConfigDict
 from typing import Optional
@@ -31,8 +31,8 @@ class Movie(BaseModel):
     title:str = Field(min_length=5,max_length=15)
     overview:str = Field(min_length=15,max_length=50)
     year:int = Field(le=2022)
-    rating: Optional[float]=None
-    category:str = Field(min_length=5,max_length=50)
+    rating: float = Field(ge=1, le=10)
+    category:str = Field(min_length=5,max_length=15)
     
     model_config = ConfigDict(
         json_schema_extra = {
@@ -63,8 +63,8 @@ def get_movies():
 #             return item
 #     return []
 
-@app.get("/movie/{id}",tags=["movie"])
-def get_movie_by_id(id:int):
+@app.get("/movie/{id}",tags=["movies"])
+def get_movie_by_id(id:int = Path(ge=1,le=2000)):
     item = [i for i in movies if i["id"]==id] 
     if item == []:
         return f"Not found movie"
@@ -75,7 +75,7 @@ def get_movie_by_id(id:int):
 #     return category
 
 @app.get("/movies/",tags=["movies"])
-def get_movies_by_cetegory(category:str):
+def get_movies_by_cetegory(category:str=Query(min_length=5,max_lenth=15)):
     filtered_by_category=[movie for movie in movies if movie["category"]==category]
     if filtered_by_category == []:
         return f"Not found category"
