@@ -1,7 +1,7 @@
 from fastapi import FastAPI,Path,Query
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse,JSONResponse
 from pydantic import BaseModel, Field,ConfigDict
-from typing import Optional
+from typing import Optional,List
 
 movies=[
     {
@@ -52,9 +52,9 @@ class Movie(BaseModel):
 def message():
     return HTMLResponse('<h1>Hello World!</h1>')
 
-@app.get("/movies",tags=["movies"])
-def get_movies():
-    return movies
+@app.get("/movies",tags=["movies"],response_model=List[Movie])
+def get_movies()->List[Movie]:
+    return JSONResponse(content=movies)
 
 # @app.get("/movies/{id}",tags=["movies"])
 # def get_movies_by_id(id:int):
@@ -63,31 +63,31 @@ def get_movies():
 #             return item
 #     return []
 
-@app.get("/movie/{id}",tags=["movies"])
-def get_movie_by_id(id:int = Path(ge=1,le=2000)):
+@app.get("/movie/{id}",tags=["movies"],response_model=Movie)
+def get_movie_by_id(id:int = Path(ge=1,le=2000))->List[Movie]:
     item = [i for i in movies if i["id"]==id] 
     if item == []:
-        return f"Not found movie"
-    return item
+        return JSONResponse(content="Not found movie")
+    return JSONResponse(content=item)
         
 # @app.get("/movies/",tags=["movies"])
 # def get_movies_by_category(category:str,year:int):
 #     return category
 
-@app.get("/movies/",tags=["movies"])
-def get_movies_by_cetegory(category:str=Query(min_length=5,max_lenth=15)):
-    filtered_by_category=[movie for movie in movies if movie["category"]==category]
-    if filtered_by_category == []:
-        return f"Not found category"
-    return filtered_by_category
+@app.get("/movies/",tags=["movies"],response_model=List[Movie])
+def get_movies_by_cetegory(category:str=Query(min_length=5,max_lenth=15))->List[Movie]:
+    data=[movie for movie in movies if movie["category"]==category]
+    if data == []:
+        return JSONResponse(content={"message":"Not found category"})
+    return JSONResponse(content=data)
     
-@app.post("/movies",tags=["movies"])
-def create_movies(movie:Movie):
+@app.post("/movies",tags=["movies"],response_model=dict)
+def create_movies(movie:Movie)->dict:
     movies.append(movie)
-    return movies
+    return JSONResponse(content={"message":"Se registró la película"})
 
-@app.put("/movies/{id}",tags=["movies"])
-def update_movie(id:int,movie:Movie):
+@app.put("/movies/{id}",tags=["movies"],response_model=dict)
+def update_movie(id:int,movie:Movie)->dict:
     for item in movies:
         if item["id"]==id:
             item["title"]==movie.title
@@ -95,14 +95,14 @@ def update_movie(id:int,movie:Movie):
             item["year"]==movie.year
             item["rating"]==movie.rating
             item["category"]==movie.category
-            return movies
+            return JSONResponse(content={"message":"Se ha modificado la película"})
             
-@app.delete("/movies/",tags=["movies"])
-def delete_movie(id:int):
+@app.delete("/movies/",tags=["movies"],response_model=dict)
+def delete_movie(id:int)->dict:
     for item in movies:
         if item["id"]==id:
             movies.remove(item)
-            return movies
+            return JSONResponse(content={"message":"Se ha eliminado la película"})
     # global movies
     # movies = [movie for movie in movies if movie["id"] != id]
     # return movies
