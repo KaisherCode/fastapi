@@ -1,44 +1,21 @@
-from fastapi import FastAPI,Path,Query,Request,HTTPException,Depends
+from fastapi import FastAPI,Path,Query,Depends
 from fastapi.responses import HTMLResponse,JSONResponse
 from pydantic import BaseModel, Field,ConfigDict
 from typing import Optional,List
-from jwt_manager import create_token,validate_token
-from fastapi.security import HTTPBearer
+from jwt_manager import create_token
 from config.database import Session, engine, Base
 from models.movie import Movie as MovieModel
 from fastapi.encoders import jsonable_encoder
-
-movies=[
-    {
-        "id":1,
-        "title":"Avatar",
-        "overview":"En un axuberante planeta llamado Pandora viven los Na'vi seres que ...",
-        "year":2009,
-        "rating":7.8,
-        "category":"Acción"
-    },
-    {
-        "id":2,
-        "title":"Reverdale",
-        "overview":"Riverdale is an American television series based on the characters of Archie Comics.",
-        "year":2017,
-        "rating":8,
-        "category":"Teen Drama Mystery"
-    }
-]
+from middlewares.error_handler import ErrorHanddler
+from middlewares.jwt_bearer import JWTBearer
 
 app = FastAPI()
 app.title = "Mi app con FastAPI"
 app.version = "0.0.1"
 
-Base.metadata.create_all(bind=engine)
+app.add_middleware(ErrorHanddler)
 
-class JWTBearer(HTTPBearer):
-    async def __call__(self,request:Request):
-        auth = await super().__call__(request)
-        data = validate_token(auth.credentials)
-        if data['email'] != "admin@gmail.com":
-            raise HTTPException(status_code=403,detail="Credenciales inválidos")          
+Base.metadata.create_all(bind=engine)          
 
 class User(BaseModel):
     email: str
