@@ -6,6 +6,7 @@ from jwt_manager import create_token,validate_token
 from fastapi.security import HTTPBearer
 from config.database import Session, engine, Base
 from models.movie import Movie as MovieModel
+from fastapi.encoders import jsonable_encoder
 
 movies=[
     {
@@ -77,32 +78,25 @@ def login(user:User):
 
 @app.get("/movies",tags=["movies"],response_model=List[Movie],status_code=200,dependencies=[Depends(JWTBearer())])
 def get_movies()->List[Movie]:
-    return JSONResponse(status_code=200,content=movies)
-
-# @app.get("/movies/{id}",tags=["movies"])
-# def get_movies_by_id(id:int):
-#     for item in movies:
-#         if item["id"]==id:
-#             return item
-#     return []
+    db = Session()
+    result = db.query(MovieModel).all()
+    return JSONResponse(status_code=200,content=jsonable_encoder(result))
 
 @app.get("/movie/{id}",tags=["movies"],response_model=Movie)
 def get_movie_by_id(id:int = Path(ge=1,le=2000))->Movie:
-    item = [i for i in movies if i["id"]==id] 
-    if item == []:
-        return JSONResponse(content=[],status_code=404)
-    return JSONResponse(content=item)
-        
-# @app.get("/movies/",tags=["movies"])
-# def get_movies_by_category(category:str,year:int):
-#     return category
+    db = Session()
+    result = db.query(MovieModel).filter(MovieModel.id==id).first()
+    if not result:
+        return JSONResponse(status_code=404,content={"message":"No encontrado"})
+    return JSONResponse(status_code=200,content=jsonable_encoder(result))
 
 @app.get("/movies/",tags=["movies"],response_model=List[Movie])
-def get_movies_by_cetegory(category:str=Query(min_length=5,max_lenth=15))->List[Movie]:
-    data=[movie for movie in movies if movie["category"]==category]
-    if data == []:
-        return JSONResponse(content=[],status_code=404)
-    return JSONResponse(content=data)
+def get_movies_by_cetegory(category:str=Query(min_length=5,max_lenth=15)) -> List[Movie]:
+    db = Session()
+    result = db.query(MovieModel).filter(MovieModel.category==category).all()
+    if not result:
+        return JSONResponse(status_code=404,content={"message":"They are no films with that category"})
+    return JSONResponse(status_code=200,content=jsonable_encoder(result))
     
 @app.post("/movies",tags=["movies"],response_model=dict,status_code=201)
 def create_movies(movie: Movie) -> dict:
@@ -129,7 +123,4 @@ def delete_movie(id:int)->dict:
         if item["id"]==id:
             movies.remove(item)
             return JSONResponse(status_code=200,content={"message":"Se ha eliminado la película"})
-    # global movies
-    # movies = [movie for movie in movies if movie["id"] != id]
-    # return movies
-
+    
