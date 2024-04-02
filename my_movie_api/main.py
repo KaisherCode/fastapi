@@ -5,7 +5,7 @@ from typing import Optional,List
 from jwt_manager import create_token,validate_token
 from fastapi.security import HTTPBearer
 from config.database import Session, engine, Base
-from models.movie import Movie
+from models.movie import Movie as MovieModel
 
 movies=[
     {
@@ -105,8 +105,11 @@ def get_movies_by_cetegory(category:str=Query(min_length=5,max_lenth=15))->List[
     return JSONResponse(content=data)
     
 @app.post("/movies",tags=["movies"],response_model=dict,status_code=201)
-def create_movies(movie:Movie)->dict:
-    movies.append(movie)
+def create_movies(movie: Movie) -> dict:
+    db = Session()
+    new_movie = MovieModel(**movie.model_dump())
+    db.add(new_movie)
+    db.commit()
     return JSONResponse(status_code=201,content={"message":"Se registró la película"})
 
 @app.put("/movies/{id}",tags=["movies"],response_model=dict,status_code=200)
