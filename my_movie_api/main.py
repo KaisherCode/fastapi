@@ -1,7 +1,4 @@
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel
-from jwt_manager import create_token
 from config.database import engine, Base
 from middlewares.error_handler import ErrorHanddler
 from routers.movie import movie_router
